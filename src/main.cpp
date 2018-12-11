@@ -108,13 +108,14 @@ int main() {
           for (int i=0; i<num_waypoints; i++) {
               double dx = ptsx[i] - px;
               double dy = ptsy[i] - py;
-              double neg_psi = 0.0 - psi;
-              ptsx_world(i) = dx * cos(neg_psi) - dy * sin(neg_psi);
-              ptsy_world(i) = dx * sin(neg_psi) + dy * cos(neg_psi);
+              ptsx_world(i) = dx * cos(-psi) - dy * sin(-psi);
+              ptsy_world(i) = dx * sin(-psi) + dy * cos(-psi);
           }
 
           // Calculate polynomial coefficients
           Eigen::VectorXd coeffs = polyfit(ptsx_world, ptsy_world, 3);
+
+          double delay = 100 / 1000.0; // 100 millisecond delay
 
           // Set state
           double x = 0;
@@ -123,8 +124,16 @@ int main() {
           double cte = coeffs[0];
           double epsi = -atan(coeffs[1]);
 
+          // Account for 100 ms delay
+          double x_delay = x + (v * cos(psi) * delay);
+          double y_delay = y + (v * sin(psi) * delay);
+          double psi_delay = psi - (v * delta / mpc.Lf * delay);
+          double v_delay = v + a * delay;
+          double cte_delay = cte + (v * sin(epsi) * delay);
+          double epsi_delay = epsi + (v * epsi / mpc.Lf * delay);
+
           Eigen::VectorXd state(6);
-          state << x, y, psi, v, cte, epsi;
+          state << x_delay, y_delay, psi_delay, v_delay, cte_delay, epsi_delay;
 
           // Calculate steering and throttle values
           auto actuator_values = mpc.Solve(state, coeffs);

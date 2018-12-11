@@ -24,7 +24,7 @@ double dt = 0.1;
 const double Lf = 2.67;
 
 // Change this to increase top speed
-double ref_v = 60;
+double ref_v = 120;
 
 size_t x_start = 0;
 size_t y_start = x_start + N;
