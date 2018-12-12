@@ -65,6 +65,20 @@ Eigen::VectorXd polyfit(Eigen::VectorXd xvals, Eigen::VectorXd yvals,
   return result;
 }
 
+std::vector<Eigen::VectorXd> TransformPts(std::vector<double> ptsx, std::vector<double> ptsy, double px, double py, double psi) {
+    size_t num_waypoints = ptsx.size();
+    Eigen::VectorXd ptsx_world = Eigen::VectorXd(num_waypoints);
+    Eigen::VectorXd ptsy_world = Eigen::VectorXd(num_waypoints);
+    for (int i=0; i<num_waypoints; i++) {
+        double dx = ptsx[i] - px;
+        double dy = ptsy[i] - py;
+        ptsx_world(i) = dx * cos(-psi) - dy * sin(-psi);
+        ptsy_world(i) = dx * sin(-psi) + dy * cos(-psi);
+    }
+
+    return {ptsx_world, ptsy_world};
+}
+
 int main() {
   uWS::Hub h;
 
@@ -100,17 +114,10 @@ int main() {
           * Both are in between [-1, 1].
           *
           */
-
           // Transform between vehicle and world coordinates
-          size_t num_waypoints = ptsx.size();
-          Eigen::VectorXd ptsx_world = Eigen::VectorXd(num_waypoints);
-          Eigen::VectorXd ptsy_world = Eigen::VectorXd(num_waypoints);
-          for (int i=0; i<num_waypoints; i++) {
-              double dx = ptsx[i] - px;
-              double dy = ptsy[i] - py;
-              ptsx_world(i) = dx * cos(-psi) - dy * sin(-psi);
-              ptsy_world(i) = dx * sin(-psi) + dy * cos(-psi);
-          }
+          auto transformed = TransformPts(ptsx, ptsy, px, py, psi);
+          Eigen::VectorXd ptsx_world = transformed[0];
+          Eigen::VectorXd ptsy_world = transformed[1];
 
           // Calculate polynomial coefficients
           Eigen::VectorXd coeffs = polyfit(ptsx_world, ptsy_world, 3);
@@ -130,7 +137,7 @@ int main() {
           double psi_delay = psi - (v * delta / mpc.Lf * delay);
           double v_delay = v + a * delay;
           double cte_delay = cte + (v * sin(epsi) * delay);
-          double epsi_delay = epsi + (v * epsi / mpc.Lf * delay);
+          double epsi_delay = epsi + (v * delta / mpc.Lf * delay);
 
           Eigen::VectorXd state(6);
           state << x_delay, y_delay, psi_delay, v_delay, cte_delay, epsi_delay;

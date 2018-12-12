@@ -24,7 +24,7 @@ double dt = 0.1;
 const double Lf = 2.67;
 
 // Change this to increase top speed
-double ref_v = 120;
+double ref_v = 50;
 
 size_t x_start = 0;
 size_t y_start = x_start + N;
@@ -124,12 +124,12 @@ std::vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs) {
 //  size_t i;
   typedef CPPAD_TESTVECTOR(double) Dvector;
 
-  double x = state[0];
-  double y = state[1];
-  double psi = state[2];
-  double v = state[3];
-  double cte = state[4];
-  double epsi = state[5];
+  const double x = state[0];
+  const double y = state[1];
+  const double psi = state[2];
+  const double v = state[3];
+  const double cte = state[4];
+  const double epsi = state[5];
 
   size_t state_size = 6;
   // TODO: Set the number of model variables (includes both states and inputs).
